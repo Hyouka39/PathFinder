@@ -28,7 +28,11 @@ class PersonalityRequest(BaseModel):
 
 # Load and prepare data once when server starts
 conn = mysql.connector.connect(
-    host="localhost", user="root", password="IceCream39", database="pathfinder"
+    host="mysql.railway.internal",
+    user="root",
+    password="VDqBmEdAYuKKyKWYRoGkqcaOBDXzQNTI",
+    database="railway",
+    port=3306
 )
 cs = conn.cursor()
 cs.execute("SELECT * FROM data_")
