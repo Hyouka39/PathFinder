@@ -44,7 +44,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
   };
 
   const handleLogin = () => {
-    if (username === 'Drew27' && passwordValue === 'andrew') {
+    if (username === 'PathFinder' && passwordValue === 'admin123') {
       alert('Login Successfully');
       onLoginSuccess(username);
       router.push('/');
