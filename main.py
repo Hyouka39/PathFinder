@@ -1,7 +1,7 @@
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import List
 import pandas as pd
 import numpy as np
 import mysql.connector
@@ -10,34 +10,40 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+import traceback
 
 app = FastAPI()
 
-# Allow CORS for frontend
+# Allow CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or specify your frontend domain for security
+    allow_origins=["*"],  # Change to your frontend domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Model input schema
+# Define the input model
 class PersonalityRequest(BaseModel):
-    answers: list
+    answers: List[float]
 
-# Load and prepare data once when server starts
-conn = mysql.connector.connect(
-    host="yamabiko.proxy.rlwy.net",
-    user="root",
-    password="olWpnrySKjEFvDnxYowwoTGaAVCVmKwe",
-    database="railway",
-    port=45222
-)
-cs = conn.cursor()
-cs.execute("SELECT * FROM data_")
-data = cs.fetchall()
+# Load data from MySQL
+def load_data_from_mysql():
+    conn = mysql.connector.connect(
+        host="yamabiko.proxy.rlwy.net",
+        user="root",
+        password="olWpnrySKjEFvDnxYowwoTGaAVCVmKwe",
+        database="railway",
+        port=45222
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM data_")
+    data = cursor.fetchall()
+    conn.close()
+    return data
 
+# Prepare dataset
+data = load_data_from_mysql()
 columns = ["code", "Strand"] + [f"Q{i}" for i in range(1, 49)]
 df = pd.DataFrame(data, columns=columns)
 
@@ -52,6 +58,7 @@ X = scaler.fit_transform(x)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# Train models
 svm_model = SVC(kernel="rbf", C=1.0, gamma="scale", probability=True)
 svm_model.fit(X_train, y_train)
 
@@ -60,15 +67,23 @@ knn_model.fit(X_train, y_train)
 
 svm_accuracy = accuracy_score(y_test, svm_model.predict(X_test))
 
+# Health check endpoint
+@app.get("/")
+def root():
+    return {"message": "API is running!"}
+
+# Predict personality route
 @app.post("/predict")
 def predict_personality(request: PersonalityRequest):
     try:
         input_data = pd.DataFrame([request.answers], columns=x.columns)
         input_scaled = scaler.transform(input_data)
 
+        # SVM prediction
         svm_prediction = svm_model.predict(input_scaled)
         svm_label = label_encoder.inverse_transform(svm_prediction)[0]
 
+        # KNN nearest neighbors
         distances, indices = knn_model.kneighbors(input_scaled)
 
         recommended_programs = []
@@ -96,4 +111,7 @@ def predict_personality(request: PersonalityRequest):
         }
 
     except Exception as e:
-        return {"error": str(e)}
+        return {
+            "error": str(e),
+            "trace": traceback.format_exc()
+        }
