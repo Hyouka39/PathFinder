@@ -64,6 +64,9 @@ const PersonalityTest = () => {
   const [showResult, setShowResult] = useState(false);
   const [personalityResult, setPersonalityResult] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<string | null>(null);
+  const [svmResult, setSvmResult] = useState<string | null>(null);
+  const [knnResult, setKnnResult] = useState<string | null>(null);
+
 
   const handleAnswerSelection = (answer: string) => {
     setSelectedAnswer(answer);
@@ -104,9 +107,9 @@ const PersonalityTest = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: processedAnswers }),
       });
-
       const result = await response.json();
-      setPersonalityResult(result.recommendation);
+      setSvmResult(result.svm_result);
+      setKnnResult(result.knn_result);
       setConfidence(result.confidence);
       setShowResult(true);
     } catch (error) {
@@ -146,7 +149,12 @@ const PersonalityTest = () => {
       ) : showResult ? (
         <div className="bg-white p-10 rounded shadow max-w-xl text-center">
           <h1 className="text-3xl font-bold mb-4">Your Personality Result</h1>
-          <p className="text-xl mb-2">{personalityResult}</p>
+          <p className="text-xl mb-2">
+            <strong>SVM Prediction:</strong> {svmResult}
+          </p>
+          <p className="text-xl mb-2">
+            <strong>KNN Recommendation:</strong> {knnResult}
+          </p>
           <p className="text-md text-gray-600">Confidence: {confidence}%</p>
           <button
             onClick={() => router.push('/KnowledgeTest')}
