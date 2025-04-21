@@ -106,7 +106,8 @@ def predict_personality(request: PersonalityRequest):
         final_confidence = min(final_confidence, 100)
 
         return {
-            "recommendation": final_program,
+            "svm_result": svm_label,
+            "knn_result": recommended_programs[0],  # or return all 4 if you prefer
             "confidence": round(final_confidence, 2)
         }
 
