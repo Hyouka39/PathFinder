@@ -99,7 +99,7 @@ const PersonalityTest = () => {
     const processedAnswers = answers.map(ans => ans === 'Agree' ? 1 : 0);
 
     try {
-      const response = await fetch('http://localhost:8000/predict', {
+      const response = await fetch('https://pathfinder-2-vhjw.onrender.com/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: processedAnswers }),
